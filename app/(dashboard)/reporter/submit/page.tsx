@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +21,7 @@ export function ReporterSubmitForm({ onNavigate }: ReporterSubmitFormProps) {
     // Mock file upload
     setUploadedFiles([...uploadedFiles, `damage_photo_${uploadedFiles.length + 1}.jpg`]);
   };
+
 
   const removeFile = (index: number) => {
     setUploadedFiles(uploadedFiles.filter((_, i) => i !== index));

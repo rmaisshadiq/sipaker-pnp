@@ -1,16 +1,16 @@
 'use client';
 
 import { useState } from "react";
-import { LoginPage } from "./components/LoginPage";
-import { Header } from "./components/Header";
-import { Sidebar } from "./components/Siderbar";
-import { ReporterDashboard } from "./components/ReporterDashboard";
-import { ReporterSubmitForm } from "./components/ReporterSubmitForm";
-import { ReporterHistory } from "./components/ReporterHistory";
-import { AdminDashboard } from "./components/AdminDashboard";
-import { AdminManagement } from "./components/AdminManagement";
-import { TechnicianDashboard } from "./components/TechnicianDashboard";
-import { TechnicianReportDetail } from "./components/TechnicianReportDetail";
+import { LoginPage } from "./(auth)/login/page";
+import { Header } from "../components/layout/Header";
+import { Sidebar } from "../components/layout/Sidebar";
+import { ReporterDashboard } from "./(dashboard)/reporter/page";
+import { ReporterSubmitForm } from "./(dashboard)/reporter/submit/page";
+import { ReporterHistory } from "./(dashboard)/reporter/history/page";
+import { AdminDashboard } from "./(dashboard)/admin/page";
+import { AdminManagement } from "../features/admin/components/AdminManagement";
+import { TechnicianDashboard } from "./(dashboard)/technician/page";
+import { TechnicianReportDetail } from "./(dashboard)/technician/reports/[id]/page";
 import { Toaster } from "@/components/ui/sonner";
 
 type UserRole = "reporter" | "admin" | "technician" | null;
