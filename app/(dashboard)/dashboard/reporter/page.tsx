@@ -7,7 +7,7 @@ interface ReporterDashboardProps {
   onNavigate: (view: string) => void;
 }
 
-export function ReporterDashboard({ onNavigate }: ReporterDashboardProps) {
+export default function ReporterDashboard({}: ReporterDashboardProps) {
   const stats = [
     { 
       label: "Total Laporan", 
@@ -51,7 +51,6 @@ export function ReporterDashboard({ onNavigate }: ReporterDashboardProps) {
         </div>
         <Button 
           className="bg-blue-600 hover:bg-blue-700 text-white"
-          onClick={() => onNavigate("submit-report")}
         >
           <FileText className="mr-2 h-4 w-4" />
           Laporan Baru
@@ -94,7 +93,6 @@ export function ReporterDashboard({ onNavigate }: ReporterDashboardProps) {
               <div 
                 key={report.id} 
                 className="flex items-center justify-between p-4 border border-blue-100 rounded-lg hover:bg-blue-50 cursor-pointer transition-colors"
-                onClick={() => onNavigate("history")}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -135,7 +133,6 @@ export function ReporterDashboard({ onNavigate }: ReporterDashboardProps) {
           <Button 
             variant="outline" 
             className="w-full mt-4 border-blue-200 text-blue-700 hover:bg-blue-50"
-            onClick={() => onNavigate("history")}
           >
             Lihat Semua Laporan
           </Button>

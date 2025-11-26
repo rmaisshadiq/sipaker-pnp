@@ -1,4 +1,9 @@
+"use client";
+
 import React, { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation"; // Hook untuk cek URL aktif
+import { signOut } from "next-auth/react"; // Logout langsung
 import { 
   LayoutDashboard, 
   FileText, 
@@ -8,152 +13,129 @@ import {
   LogOut,
   ClipboardList,
   Wrench,
-  ChevronLeft, // Used for collapsing indicator
-  ChevronRight // Used for expanding indicator
+  ChevronLeft, 
+  ChevronRight 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils"; // Utilitas standar shadcn untuk merge class
 
 interface SidebarProps {
-  activeView: string;
-  onNavigate: (view: string) => void;
-  userRole: "reporter" | "admin" | "technician";
-  onLogout: () => void;
+  userRole: string; // Kita hanya butuh role, navigasi diurus URL
 }
 
-export function Sidebar({ activeView, onNavigate, userRole, onLogout }: SidebarProps) {
-  // State to manage the collapsed status of the sidebar
+export function Sidebar({ userRole }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const pathname = usePathname(); // Ambil URL saat ini
 
-  const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+  const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+
+  // Definisi Menu berdasarkan Role dengan URL tujuan (href)
+  const menuItems = {
+    reporter: [
+      { href: "/dashboard/reporter", label: "Dasbor", icon: LayoutDashboard },
+      { href: "/dashboard/reporter/create", label: "Buat Laporan", icon: FileText },
+      { href: "/dashboard/reporter/history", label: "Riwayat", icon: History },
+    ],
+    admin: [
+      { href: "/dashboard/admin", label: "Dasbor", icon: LayoutDashboard },
+      { href: "/dashboard/admin/reports", label: "Kelola Laporan", icon: ClipboardList },
+      { href: "/dashboard/admin/users", label: "Kelola Pengguna", icon: Users },
+    ],
+    technician: [
+      { href: "/dashboard/technician", label: "Dasbor", icon: LayoutDashboard },
+      { href: "/dashboard/technician/tasks", label: "Tugas Saya", icon: Wrench },
+    ]
   };
 
-  // Define menu items based on user role
-  const reporterMenuItems = [
-    { id: "dashboard", label: "Dasbor", icon: LayoutDashboard },
-    { id: "submit-report", label: "Buat Laporan", icon: FileText },
-    { id: "history", label: "Riwayat Laporan", icon: History },
-  ];
-
-  const adminMenuItems = [
-    { id: "dashboard", label: "Dasbor", icon: LayoutDashboard },
-    { id: "manage-reports", label: "Kelola Laporan", icon: ClipboardList },
-    { id: "manage-users", label: "Kelola Pengguna", icon: Users }, // Added Users for admin
-  ];
-
-  const technicianMenuItems = [
-    { id: "dashboard", label: "Dasbor", icon: LayoutDashboard },
-    { id: "assigned-reports", label: "Laporan Ditugaskan", icon: Wrench },
-  ];
-
-  const menuItems = 
-    userRole === "reporter" 
-      ? reporterMenuItems 
-      : userRole === "admin" 
-      ? adminMenuItems 
-      : technicianMenuItems;
-
-  // Dynamic width classes
-  const sidebarWidthClass = isCollapsed ? "w-20" : "w-64";
-  const labelHiddenClass = isCollapsed ? "hidden" : "block";
-  const iconMarginClass = isCollapsed ? "mr-0" : "mr-2";
+  // Pilih menu berdasarkan role, fallback ke array kosong jika role tidak dikenali
+  const currentMenuItems = menuItems[userRole as keyof typeof menuItems] || [];
 
   return (
     <aside 
-      className={`border-r border-blue-400 bg-blue-900 flex flex-col h-full shadow-xl transition-all duration-300 ${sidebarWidthClass}`}
+      className={cn(
+        "border-r border-blue-400 bg-blue-900 flex flex-col h-screen shadow-xl transition-all duration-300 sticky top-0 left-0 z-40",
+        isCollapsed ? "w-20" : "w-64"
+      )}
     >
-      <div className={`p-4 ${isCollapsed ? 'justify-center' : 'justify-between'} flex items-center border-b border-blue-800`}>
-        {/* Title / Logo slot - hidden when collapsed */}
-        <h2 className={`text-blue-50 font-semibold text-lg ${labelHiddenClass}`}>App Nav</h2>
+      {/* Header Sidebar */}
+      <div className={cn(
+        "p-4 flex items-center border-b border-blue-800 h-16",
+        isCollapsed ? "justify-center" : "justify-between"
+      )}>
+        {!isCollapsed && (
+          <h2 className="text-blue-50 font-bold text-xl tracking-wide">
+            SIPAKER
+          </h2>
+        )}
         
-        {/* Toggle Button */}
         <Button 
           variant="ghost" 
           size="icon" 
-          className="text-blue-100 hover:bg-blue-800 hover:text-white"
+          className="text-blue-100 hover:bg-blue-800 hover:text-white h-8 w-8"
           onClick={toggleSidebar}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          {isCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
+          {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </Button>
       </div>
       
-      <nav className="flex-1 p-3 overflow-y-auto">
-        <div className="space-y-1">
-          {menuItems.map((item) => {
-            const Icon = item.icon;
-            return (
+      {/* Menu Navigasi */}
+      <nav className="flex-1 p-3 overflow-y-auto space-y-2">
+        {currentMenuItems.map((item) => {
+          const Icon = item.icon;
+          // Cek apakah URL saat ini diawali dengan href menu ini
+          const isActive = pathname === item.href;
+
+          return (
+            <Link key={item.href} href={item.href} passHref>
               <Button
-                key={item.id}
-                variant={activeView === item.id ? "secondary" : "ghost"}
-                className={`
-                  w-full 
-                  justify-start 
-                  text-blue-100 
-                  transition-colors 
-                  duration-200 
-                  ${isCollapsed ? 'p-3 h-auto' : 'px-4 py-2'}
-                  ${
-                    activeView === item.id 
-                      ? "bg-blue-700 text-white hover:bg-blue-600" 
-                      : "hover:bg-blue-800 hover:text-white"
-                  }
-                `}
-                onClick={() => onNavigate(item.id)}
+                variant={isActive ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start text-blue-100 transition-all duration-200",
+                  isCollapsed ? "px-0 justify-center h-12" : "px-4 py-2",
+                  isActive 
+                    ? "bg-blue-700 text-white hover:bg-blue-600 shadow-md" 
+                    : "hover:bg-blue-800 hover:text-white"
+                )}
+                title={isCollapsed ? item.label : undefined}
               >
-                {/* Icon is always visible */}
-                <Icon className={`h-5 w-5 ${iconMarginClass}`} />
-                {/* Label is conditionally rendered */}
-                <span className={labelHiddenClass}>
-                  {item.label}
-                </span>
+                <Icon size={20} className={cn(isCollapsed ? "mr-0" : "mr-3")} />
+                {!isCollapsed && <span>{item.label}</span>}
               </Button>
-            );
-          })}
-        </div>
-        
-        {/* Separator is visible but adjusts margin when collapsed */}
-        <Separator className="my-4 bg-blue-800" />
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Footer Sidebar (Settings & Logout) */}
+      <div className="p-3 mt-auto mb-4">
+        <Separator className="my-2 bg-blue-800" />
         
         <div className="space-y-1">
-          {/* Settings Button */}
-          <Button variant="ghost" className={`
-            w-full 
-            justify-start 
-            text-blue-100 
-            transition-colors 
-            duration-200 
-            ${isCollapsed ? 'p-3 h-auto' : 'px-4 py-2'}
-            hover:bg-blue-800 hover:text-white
-          `}>
-            <Settings className={`h-5 w-5 ${iconMarginClass}`} />
-            <span className={labelHiddenClass}>Pengaturan</span>
-          </Button>
-          
-          {/* Logout Button */}
           <Button 
             variant="ghost" 
-            className={`
-              w-full 
-              justify-start 
-              text-blue-100 
-              transition-colors 
-              duration-200 
-              ${isCollapsed ? 'p-3 h-auto' : 'px-4 py-2'}
-              hover:bg-blue-800 hover:text-white
-            `}
-            onClick={onLogout}
+            className={cn(
+              "w-full text-blue-100 hover:bg-blue-800 hover:text-white",
+              isCollapsed ? "justify-center px-0" : "justify-start px-4"
+            )}
           >
-            <LogOut className={`h-5 w-5 ${iconMarginClass}`} />
-            <span className={labelHiddenClass}>Keluar</span>
+            <Settings size={20} className={cn(isCollapsed ? "mr-0" : "mr-3")} />
+            {!isCollapsed && <span>Pengaturan</span>}
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className={cn(
+              "w-full text-red-300 hover:bg-red-900/30 hover:text-red-200",
+              isCollapsed ? "justify-center px-0" : "justify-start px-4"
+            )}
+          >
+            <LogOut size={20} className={cn(isCollapsed ? "mr-0" : "mr-3")} />
+            {!isCollapsed && <span>Keluar</span>}
           </Button>
         </div>
-      </nav>
+      </div>
     </aside>
   );
 }
