@@ -204,27 +204,13 @@ export function TechnicianReportDetail({ onNavigate }: TechnicianReportDetailPro
           {/* Update Form */}
           <Card className="border-blue-400 bg-white shadow-md">
             <CardHeader>
-              <CardTitle className="text-blue-900">Perbarui Status</CardTitle>
+              <CardTitle className="text-blue-900">Laporkan Penyelesaian</CardTitle>
               <CardDescription className="text-blue-600">
                 Perbarui kemajuan dan tambahkan foto penyelesaian
               </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleStatusUpdate} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="status" className="text-blue-900">Status</Label>
-                  <Select name="status" defaultValue="in-progress">
-                    <SelectTrigger className="border-blue-200 bg-white">
-                      <SelectValue placeholder="Pilih status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Menunggu</SelectItem>
-                      <SelectItem value="in-progress">Dalam Proses</SelectItem>
-                      <SelectItem value="completed">Selesai</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 <div className="space-y-2">
                   <Label htmlFor="actions" className="text-blue-900">Tindakan yang Diambil</Label>
                   <Textarea 

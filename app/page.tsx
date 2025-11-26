@@ -36,10 +36,10 @@ export default function App() {
   // User names based on role
   const userName = 
     userRole === "reporter" 
-      ? "Alice Cooper" 
+      ? "Rafi Maisshadiq" 
       : userRole === "admin" 
-      ? "Admin User"
-      : "John Smith";
+      ? "Admin"
+      : "Rafi Maisshadiq";
 
   const userRoleLabel = 
     userRole === "reporter" 
