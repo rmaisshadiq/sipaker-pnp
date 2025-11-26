@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, CheckCircle2, Clock, FileText, Users, Wrench } from "lucide-react";
 
-export function AdminDashboard() {
+export default function AdminDashboard() {
   const stats = [
     { 
       label: "Total Laporan", 

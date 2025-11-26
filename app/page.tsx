@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from "react";
-import { LoginPage } from "./(auth)/login/page";
 import { Header } from "../components/layout/Header";
 import { Sidebar } from "../components/layout/Sidebar";
 import { ReporterDashboard } from "./(dashboard)/reporter/page";
@@ -48,16 +47,6 @@ export default function App() {
       ? "Administrator"
       : "Teknisi";
 
-  // Show login page if no user role
-  if (!userRole) {
-    return (
-      <>
-        <LoginPage onLogin={handleLogin} />
-        <Toaster />
-      </>
-    );
-  }
-
   // Render content based on role and active view
   const renderContent = () => {
     if (userRole === "reporter") {
@@ -94,7 +83,7 @@ export default function App() {
         <Sidebar 
           activeView={activeView} 
           onNavigate={handleNavigate} 
-          userRole={userRole}
+          userRole="reporter"
           onLogout={handleLogout}
         />
         

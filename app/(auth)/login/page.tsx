@@ -1,22 +1,43 @@
+"use client";
+
 import { Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { useState } from 'react';
+import { signInWithCredentials } from "@/lib/actions/auth";
+import { getSession } from "next-auth/react";
 
-interface LoginPageProps {
-  onLogin: (role: "reporter" | "admin" | "technician") => void;
-}
+export default function LoginPage() {
+  const router = useRouter();
+  const [error, setError] = useState("");
 
-export function LoginPage({ onLogin }: LoginPageProps) {
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const roleSelect = form.elements.namedItem("role") as HTMLSelectElement;
-    const role = roleSelect.value as "reporter" | "admin" | "technician";
-    onLogin(role);
-  };
+
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    const res = await signInWithCredentials({ email, password });
+
+    if (res.success) {
+      const session = await getSession();
+      const role = session?.user?.role;
+
+      if (role) {
+         router.push(`/dashboard/${role}`);
+      } else {
+         router.push("/dashboard");
+      }
+      router.refresh();
+
+    } else {
+      setError(typeof res?.error === "string" ? res.error : "Login Gagal: Cek email atau password");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
@@ -40,7 +61,8 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <div className="space-y-2">
               <Label htmlFor="email" className="text-blue-900">Email</Label>
               <Input 
-                id="email" 
+                id="email"
+                name="email"
                 type="email" 
                 placeholder="email.anda@kampus.ac.id" 
                 className="border-blue-200 bg-white focus:border-blue-500 focus:ring-blue-500"
@@ -51,28 +73,16 @@ export function LoginPage({ onLogin }: LoginPageProps) {
             <div className="space-y-2">
               <Label htmlFor="password" className="text-blue-900">Kata Sandi</Label>
               <Input 
-                id="password" 
+                id="password"
+                name="password"
                 type="password" 
                 placeholder="••••••••" 
                 className="border-blue-200 bg-white focus:border-blue-500 focus:ring-blue-500"
                 required
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="role" className="text-blue-900">Masuk Sebagai</Label>
-              <Select name="role" defaultValue="reporter" required>
-                <SelectTrigger className="border-blue-200 bg-white focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="Pilih peran" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="reporter">Pelapor (Mahasiswa/Staf)</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="technician">Teknisi</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
+
+            {error && <p className="text-red-500">Login gagal! Silahkan cek email dan password kembali.</p>}
             <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
               Masuk
             </Button>
