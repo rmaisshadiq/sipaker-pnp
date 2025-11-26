@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2 } from "lucide-react";
+import { Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,10 +12,12 @@ import { getSession } from "next-auth/react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
@@ -36,6 +38,7 @@ export default function LoginPage() {
 
     } else {
       setError(typeof res?.error === "string" ? res.error : "Login Gagal: Cek email atau password");
+      setIsLoading(false)
     }
   }
 
@@ -83,9 +86,20 @@ export default function LoginPage() {
             </div>
 
             {error && <p className="text-red-500">Login gagal! Silahkan cek email dan password kembali.</p>}
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              Masuk
-            </Button>
+            <Button 
+              type="submit" 
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              disabled={isLoading} // Mencegah double click
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                "Masuk"
+            )}
+          </Button>
             
             <div className="text-center text-sm">
               <a href="#" className="text-blue-600 hover:text-blue-800">
