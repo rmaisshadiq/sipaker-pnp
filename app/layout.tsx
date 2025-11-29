@@ -5,6 +5,8 @@ import "./globals.css";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
 
+import NextTopLoader from 'nextjs-toploader';
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -31,7 +33,11 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Gunakan Wrapper Client Component di sini */}
+        <NextTopLoader 
+          color="#2563eb" // Warna Biru (sesuai tema sipaker)
+          height={3}
+          showSpinner={false} // Matikan spinner pojok kanan (opsional)
+        />
         <Providers session={session}>
           {children}
         </Providers>

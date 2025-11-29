@@ -170,12 +170,14 @@ export default function ReporterSubmitForm() {
 
       if (result.success) {
         await clearReportDraft();
+        setIsSubmitting(false);
 
         toast.success(result.message);
         router.push("/dashboard/reporter"); // Redirect ke dashboard
         router.refresh();
       } else {
         toast.error(result.message);
+        setIsSubmitting(false);
       }
     } catch (error) {
       toast.error(`Terjadi kesalahan saat mengirim laporan. Error: ${error}`);
