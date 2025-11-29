@@ -8,6 +8,27 @@
       "when": 1764076885290,
       "tag": "0000_wakeful_mongoose",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1764417973413,
+      "tag": "0001_parched_purifiers",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1764419126921,
+      "tag": "0002_orange_slipstream",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1764419156669,
+      "tag": "0003_flowery_absorbing_man",
+      "breakpoints": true
     }
   ]
 }

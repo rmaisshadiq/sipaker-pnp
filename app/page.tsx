@@ -22,7 +22,7 @@ export default async function LandingPage() {
 
   // 3. Jika belum login, tampilkan Landing Page
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white flex flex-col">
+    <div className="min-h-screen bg-linear-to-b from-blue-50 to-white flex flex-col">
       {/* Navbar Sederhana */}
       <nav className="p-6 flex justify-between items-center max-w-7xl mx-auto w-full">
         <div className="text-2xl font-bold text-blue-900 flex items-center gap-2">
