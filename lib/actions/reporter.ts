@@ -5,6 +5,9 @@ import { damage_reports } from "@/database/schema";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth"; // Sesuaikan path
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import ratelimit from "../ratelimit";
+import { redirect } from "next/navigation";
 
 type PriorityType = "rendah" | "menengah" | "tinggi";
 
@@ -22,6 +25,11 @@ export async function createDamageReport(data: CreateReportParams) {
   if (!session || !session.user.id) {
     return { success: false, message: "Anda harus login untuk melapor." };
   }
+
+  const ip = (await headers()).get('x-forwarded-for') || '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+
+  if(!success) return redirect('/too-fast');
 
   try {
     await db.insert(damage_reports).values({

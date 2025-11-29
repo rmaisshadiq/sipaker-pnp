@@ -6,6 +6,9 @@ import { eq } from "drizzle-orm";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth"; // Sesuaikan path auth
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import ratelimit from "../ratelimit";
+import { redirect } from "next/navigation";
 
 export async function submitCompletionReport(
   reportId: string, // ID dari maintenance_reports
@@ -17,6 +20,11 @@ export async function submitCompletionReport(
   if (!session) {
     return { success: false, message: "Unauthorized" };
   }
+
+  const ip = (await headers()).get('x-forwarded-for') || '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+
+  if(!success) return redirect('/too-fast');
 
   try {
     // --- PERUBAHAN: Jalankan Berurutan (Tanpa Transaction) ---

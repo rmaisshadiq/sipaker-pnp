@@ -7,41 +7,67 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
 import { useState } from 'react';
-import { signInWithCredentials } from "@/lib/actions/auth";
-import { getSession } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
+import { checkLoginRateLimit } from "@/lib/actions/auth"; // Pastikan path ini benar
+import { toast } from "sonner";
+import Link from "next/link"; // Gunakan Link Next.js, bukan <a>
 
 export default function LoginPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  
+  // Hapus state error jika Anda sudah menggunakan toast, 
+  // atau gunakan setError di dalam handleSubmit jika ingin pesan teks merah.
+  // const [error, setError] = useState(""); 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
+    // setError(""); // Reset error jika ada
 
     const formData = new FormData(e.currentTarget);
     const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    const res = await signInWithCredentials({ email, password });
+    try {
+      // 1. Cek Rate Limit (Server Action)
+      await checkLoginRateLimit();
 
-    if (res.success) {
-      const session = await getSession();
-      const role = session?.user?.role;
+      // 2. Login Credential (Client Side)
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-      if (role) {
-         router.push(`/dashboard/${role}`);
+      if (res?.error) {
+        toast.error("Email atau kata sandi salah");
+        // setError("Email atau kata sandi salah"); // Opsional
       } else {
-         router.push("/dashboard");
+        // 3. Ambil Session untuk Cek Role
+        const session = await getSession();
+        const role = session?.user?.role;
+
+        toast.success("Login berhasil!");
+
+        if (role) {
+          router.push(`/dashboard/${role}`);
+        } else {
+          router.push("/dashboard");
+        }
+        
+        router.refresh(); // Update komponen server
       }
-      router.refresh();
 
-    } else {
-      setError(typeof res?.error === "string" ? res.error : "Login Gagal: Cek email atau password");
-      setIsLoading(false)
+    } catch (error) {
+      console.error(error);
+      toast.error("Terjadi kesalahan sistem");
+    } finally {
+      setIsLoading(false);
     }
-  }
+  }; // <--- TUTUP handleSubmit DI SINI
 
+  // <--- RETURN JSX HARUS DI LUAR handleSubmit
   return (
     <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md border-blue-400 bg-white shadow-lg">
@@ -58,38 +84,42 @@ export default function LoginPage() {
             </CardDescription>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-blue-900">Email</Label>
-              <Input 
+              <Input
                 id="email"
                 name="email"
-                type="email" 
-                placeholder="email.anda@kampus.ac.id" 
+                type="email"
+                placeholder="email.anda@kampus.ac.id"
                 className="border-blue-200 bg-white focus:border-blue-500 focus:ring-blue-500"
                 required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-blue-900">Kata Sandi</Label>
-              <Input 
-                id="password"
-                name="password"
-                type="password" 
-                placeholder="••••••••" 
-                className="border-blue-200 bg-white focus:border-blue-500 focus:ring-blue-500"
-                required
+                disabled={isLoading}
               />
             </div>
 
-            {error && <p className="text-red-500">Login gagal! Silahkan cek email dan password kembali.</p>}
-            <Button 
-              type="submit" 
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-blue-900">Kata Sandi</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                className="border-blue-200 bg-white focus:border-blue-500 focus:ring-blue-500"
+                required
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Jika ingin inline error, uncomment baris bawah */}
+            {/* {error && <p className="text-red-500 text-sm">{error}</p>} */}
+
+            <Button
+              type="submit"
               className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-              disabled={isLoading} // Mencegah double click
+              disabled={isLoading}
             >
               {isLoading ? (
                 <>
@@ -98,13 +128,13 @@ export default function LoginPage() {
                 </>
               ) : (
                 "Masuk"
-            )}
-          </Button>
-            
+              )}
+            </Button>
+
             <div className="text-center text-sm">
-              <a href="#" className="text-blue-600 hover:text-blue-800">
+              <Link href="#" className="text-blue-600 hover:text-blue-800 hover:underline">
                 Lupa kata sandi?
-              </a>
+              </Link>
             </div>
           </form>
         </CardContent>

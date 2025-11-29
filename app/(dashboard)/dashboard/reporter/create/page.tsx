@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { toast } from "sonner";
 // Import Server Action & ImageKit
 import { createDamageReport } from "@/lib/actions/reporter";
 import { upload } from "@imagekit/next";
+import { saveReportDraft, clearReportDraft, getReportDraft } from "@/lib/actions/draft";
 
 export default function ReporterSubmitForm() {
   const router = useRouter();
@@ -33,6 +34,63 @@ export default function ReporterSubmitForm() {
   // Image Data
   const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isDraftSaving, setIsDraftSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const loadDraft = async () => {
+      const draft = await getReportDraft();
+      
+      if (draft) {
+        // Isi form dengan data dari Redis
+        setTitle(draft.title || "");
+        setDescription(draft.description || "");
+        setPriority(draft.priority || "medium");
+        setUploadedFiles(draft.images || []);
+        
+        // Memecah location kembali menjadi building & room (jika formatnya "Gedung - Ruang")
+        if (draft.location) {
+            const parts = draft.location.split(" - ");
+            if (parts.length >= 2) {
+                setBuilding(parts[0]);
+                setRoom(parts[1]);
+            }
+        }
+        
+        toast.info("Draft laporan dipulihkan.");
+      }
+    };
+
+    loadDraft();
+  }, []); // Array kosong = jalan sekali saat mount
+
+  useEffect(() => {
+    // Jangan simpan jika form masih kosong banget
+    if (!title && !description && !room) return;
+
+    setIsDraftSaving(true);
+
+    // DEBOUNCE: Tunggu 1.5 detik setelah user berhenti mengetik
+    const timer = setTimeout(async () => {
+      const draftData = {
+        title,
+        description,
+        location: `${building} - ${room}`,
+        priority,
+        images: uploadedFiles
+      };
+
+      await saveReportDraft(draftData);
+      
+      setIsDraftSaving(false);
+      setLastSaved(new Date());
+    }, 1500);
+
+    // Cleanup: Jika user mengetik lagi sebelum 1.5 detik, batalkan timer sebelumnya
+    return () => clearTimeout(timer);
+
+  }, [title, description, building, room, priority, uploadedFiles]); // Dependency Array: Jalankan effect jika salah satu ini berubah
 
   // --- 1. HANDLE IMAGEKIT UPLOAD ---
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,6 +169,8 @@ export default function ReporterSubmitForm() {
       });
 
       if (result.success) {
+        await clearReportDraft();
+
         toast.success(result.message);
         router.push("/dashboard/reporter"); // Redirect ke dashboard
         router.refresh();
@@ -118,7 +178,7 @@ export default function ReporterSubmitForm() {
         toast.error(result.message);
       }
     } catch (error) {
-      toast.error("Terjadi kesalahan saat mengirim laporan.");
+      toast.error(`Terjadi kesalahan saat mengirim laporan. Error: ${error}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -126,9 +186,23 @@ export default function ReporterSubmitForm() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-blue-900">Buat Laporan Baru</h2>
-        <p className="text-blue-600">Isi formulir di bawah ini untuk melaporkan kerusakan fasilitas</p>
+      {/* Header dengan Indikator Auto-Save */}
+      <div className="mb-6 flex justify-between items-end">
+        <div>
+            <h2 className="text-2xl font-bold text-blue-900">Buat Laporan Baru</h2>
+            <p className="text-blue-600">Isi formulir untuk melaporkan kerusakan</p>
+        </div>
+        
+        {/* UI Feedback untuk User */}
+        <div className="text-xs text-slate-400 text-right">
+            {isDraftSaving ? (
+                <span className="flex items-center gap-1 text-amber-500">
+                    Menyimpan draft...
+                </span>
+            ) : lastSaved ? (
+                <span>Disimpan otomatis {lastSaved.toLocaleTimeString()}</span>
+            ) : null}
+        </div>
       </div>
 
       <Card className="border-blue-400 bg-white shadow-md">
@@ -140,8 +214,6 @@ export default function ReporterSubmitForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            
-            {/* Input Judul (Wajib utk Schema) */}
             <div className="space-y-2">
                 <Label htmlFor="title" className="text-blue-900">Judul Laporan</Label>
                 <Input 

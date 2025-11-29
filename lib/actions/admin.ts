@@ -6,11 +6,19 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/auth";
+import { headers } from "next/headers";
+import ratelimit from "../ratelimit";
+import { redirect } from "next/navigation";
 
 // 1. Action: Menugaskan Teknisi (Assign)
 export async function assignTechnician(damageReportId: string, technicianId: number) {
   const session = await getServerSession(authOptions);
   if (session?.user?.role !== "admin") return { success: false, message: "Unauthorized" };
+
+  const ip = (await headers()).get('x-forwarded-for') || '127.0.0.1';
+  const { success } = await ratelimit.limit(ip);
+
+  if(!success) return redirect('/too-fast');
 
   try {
     // --- HAPUS db.transaction, JALANKAN BERURUTAN ---

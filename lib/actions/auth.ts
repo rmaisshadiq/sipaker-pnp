@@ -1,23 +1,20 @@
-import { signIn } from "next-auth/react";
+'use server'; // Wajib Server Action
 
-export const signInWithCredentials = async (params: { email: string, password: string }) => {
-    const { email, password } = params;
+import { headers } from "next/headers";
+import ratelimit from "@/lib/ratelimit"; // Sesuaikan path import
+import { redirect } from "next/navigation";
 
-    try {
-        const result = await signIn("credentials", {
-            email: email,
-            password: password,
-            redirect: false,
-        });
+export const checkLoginRateLimit = async () => {
+    const ip = (await headers()).get('x-forwarded-for') || '127.0.0.1';
+    
+    // Cek limit
+    const { success } = await ratelimit.limit(ip);
 
-        if (result?.error) {
-            return { success: false, error: result.error };
-        }
-
-        return { success: true };
-        
-    } catch (error) {
-        console.log(error, "Sign in error");
-        return { success: false, error: "Something went wrong during sign in" };
+    // Jika kena limit, redirect (akan melempar error NEXT_REDIRECT)
+    // JANGAN bungkus ini dengan try-catch yang menelan error redirect
+    if (!success) {
+        redirect('/too-fast');
     }
+
+    return { success: true };
 };
