@@ -166,7 +166,6 @@ const handleSubmit = async (e: React.FormEvent) => {
         
         toast.success(result.message);
         router.push("/dashboard/technician");
-        router.refresh();
       } else {
         toast.error(result.message);
       }
